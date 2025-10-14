@@ -82,4 +82,12 @@ public class TabelaHashLinear implements TabelaHash{
         //Se percorrer a tabela toda sem encontrar a chave, retorna false
         return false;
     }
+
+    //Método para limpar a tabela marcando todas as posições como vazias
+    @Override
+    public void limpar(){
+        for(int i = 0; i < tamanho; i++){
+            tabela[i] = vazio;
+        }
+    }
 }
