@@ -49,4 +49,37 @@ public class TabelaHashLinear implements TabelaHash{
         }
 
     }
+
+    /*
+    Método que busca uma chave na tabela
+    Se houver colisão, procura a próxima posição
+     */
+    @Override
+    public boolean buscar(int chave, ContadoresMetrica metrica){
+        //Calcula a posição inicial usando a função hash
+        int hashBase = funcaoHash.calcular(chave, tamanho);
+        //Posição inicial
+        int pos = hashBase;
+
+        //Laço de repetição para iterar sobre a tabela
+        for(int i = 0; i < tamanho; i++){
+            //Rehashing para percorrer sobre as posições
+            pos = (hashBase + i) % tamanho;
+
+            //Conta os passos de busca
+            metrica.adicionarPassosBusca(1);
+
+            //Se a posição for vazia, retorna false
+            if(tabela[pos] == vazio){
+                return false;
+            }
+
+            //Se encontrar a chave, retorna true
+            if(tabela[pos] == chave){
+                return true;
+            }
+        }
+        //Se percorrer a tabela toda sem encontrar a chave, retorna false
+        return false;
+    }
 }
