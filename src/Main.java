@@ -1,6 +1,7 @@
 import dados.GeradorDados;
 import dados.Registro;
 
+import execucao.CsvAmostraRegistros;
 import execucao.CsvResultados;
 import execucao.ImpressoraResultados;
 import execucao.ParametrosExperimento;
@@ -22,21 +23,34 @@ import hash.tabelas.TabelaHashQuadratica;
  * Orquestra os experimentos:
  * (M × N × estratégia × função hash)
  * - imprime tabela Markdown no console
- * - grava CSV se habilitado
- * Usa objetos Registro (cada elemento é um Registro).
+ * - grava CSV de métricas (CsvResultados)
+ * - imprime e grava uma AMOSTRA de registros por combinação (opcional)
+ * Usa objetos Registro para cada elemento.
  */
 public class Main {
 
-    private static final boolean GRAVAR_CSV = true;
-    private static final String CAMINHO_CSV = "resultados_hash.csv";
+    // ----- controles de saída -----
+    private static final boolean GRAVAR_CSV_METRICAS     = true;
+    private static final String  CAMINHO_CSV_METRICAS    = "resultados_hash.csv";
+
+    private static final boolean EXIBIR_AMOSTRA_CONSOLE  = true;   // imprime a amostra no console
+    private static final boolean GRAVAR_CSV_AMOSTRA      = true;   // grava amostra em CSV separado
+    private static final String  CAMINHO_CSV_AMOSTRA     = "registros_amostra.csv";
+    private static final int     TAMANHO_AMOSTRA         = 10;     // quantidade de registros por combinação
 
     public static void main(String[] args) throws Exception {
         ImpressoraResultados.imprimirCabecalho();
 
-        CsvResultados csv = null;
-        if (GRAVAR_CSV) {
-            csv = new CsvResultados(CAMINHO_CSV);
-            csv.abrir(); // pode lançar; propagará
+        CsvResultados csvMetricas = null;
+        if (GRAVAR_CSV_METRICAS) {
+            csvMetricas = new CsvResultados(CAMINHO_CSV_METRICAS);
+            csvMetricas.abrir();
+        }
+
+        CsvAmostraRegistros csvAmostra = null;
+        if (GRAVAR_CSV_AMOSTRA) {
+            csvAmostra = new CsvAmostraRegistros(CAMINHO_CSV_AMOSTRA);
+            csvAmostra.abrir();
         }
 
         int[] tamanhosTabela = ParametrosExperimento.TAMANHOS_TABELA;
@@ -59,21 +73,30 @@ public class Main {
                     String nomeFuncao = nomesFuncoes[i];
                     FuncaoHash f = funcoes[i];
 
-                    executar("encadeada", new TabelaHashEncadeada(m, f), m, n, nomeFuncao, csv);
-                    executar("linear",    new TabelaHashLinear(m, f),     m, n, nomeFuncao, csv);
-                    executar("quadratica",new TabelaHashQuadratica(m, f), m, n, nomeFuncao, csv);
+                    executar("encadeada", new TabelaHashEncadeada(m, f), m, n, nomeFuncao, csvMetricas, csvAmostra);
+                    executar("linear",    new TabelaHashLinear(m, f),     m, n, nomeFuncao, csvMetricas, csvAmostra);
+                    executar("quadratica",new TabelaHashQuadratica(m, f), m, n, nomeFuncao, csvMetricas, csvAmostra);
                 }
             }
         }
 
-        if (csv != null) {
-            csv.close(); // pode lançar; propagará
+        if (csvMetricas != null) {
+            csvMetricas.close();
+        }
+        if (csvAmostra != null) {
+            csvAmostra.close();
         }
     }
 
-    private static void executar(String nomeEstrategia, TabelaHash tabela,
-                                 int tamanhoTabela, int quantidadeDados,
-                                 String nomeFuncao, CsvResultados csv) throws Exception {
+    private static void executar(
+            String nomeEstrategia,
+            TabelaHash tabela,
+            int tamanhoTabela,
+            int quantidadeDados,
+            String nomeFuncao,
+            CsvResultados csvMetricas,
+            CsvAmostraRegistros csvAmostra
+    ) throws Exception {
 
         ContadoresMetrica cont = new ContadoresMetrica();
         cont.zerar();
@@ -81,15 +104,23 @@ public class Main {
         MedidorTempo tempoInsercao = new MedidorTempo();
         MedidorTempo tempoBusca    = new MedidorTempo();
 
-        // Conjunto de dados (cada elemento é um Registro)
-        GeradorDados gerador = new GeradorDados(ParametrosExperimento.SEMENTE, quantidadeDados);
+        // Amostra de registros
+        final int tamanhoAmostraEfetivo = Math.min(TAMANHO_AMOSTRA, quantidadeDados);
+        final String[] amostra = new String[tamanhoAmostraEfetivo];
+        int preenchidosAmostra = 0;
 
         // ---------- INSERÇÃO ----------
+        GeradorDados gerador = new GeradorDados(ParametrosExperimento.SEMENTE, quantidadeDados);
         tempoInsercao.iniciar();
         while (gerador.temProximoElemento()) {
-            // usa Registro como especificado no enunciado
             Registro registro = new Registro(gerador.proximoCodigo());
-            int chave = registro.getCodigo();           // continua inserindo como int (performático)
+            int chave = registro.getCodigo();
+
+            // Coleta os primeiros N registros para amostra
+            if (preenchidosAmostra < tamanhoAmostraEfetivo) {
+                amostra[preenchidosAmostra++] = registro.getCodigoComoNoveDigitos();
+            }
+
             tabela.inserir(chave, cont);
         }
         tempoInsercao.parar();
@@ -99,8 +130,7 @@ public class Main {
         tempoBusca.iniciar();
         while (gerador.temProximoElemento()) {
             Registro registro = new Registro(gerador.proximoCodigo());
-            int chave = registro.getCodigo();
-            tabela.buscar(chave, cont);
+            tabela.buscar(registro.getCodigo(), cont);
         }
         tempoBusca.parar();
 
@@ -132,7 +162,8 @@ public class Main {
             }
         }
 
-        // ---------- SAÍDA NO CONSOLE ----------
+        // ---------- SAÍDAS ----------
+        // 1) Métricas em tabela Markdown
         ImpressoraResultados.imprimirLinha(
                 tamanhoTabela, quantidadeDados, nomeEstrategia, nomeFuncao,
                 tempoInsercao.getDuracaoEmMilissegundos(),
@@ -143,9 +174,26 @@ public class Main {
                 top1, top2, top3
         );
 
-        // ---------- CSV OPCIONAL ----------
-        if (csv != null) {
-            csv.escreverLinha(
+        // 2) Amostra no console (opcional)
+        if (EXIBIR_AMOSTRA_CONSOLE && tamanhoAmostraEfetivo > 0) {
+            StringBuilder sb = new StringBuilder(64 + 12 * tamanhoAmostraEfetivo);
+            sb.append("Amostra de registros (")
+                    .append(tamanhoAmostraEfetivo).append(") [")
+                    .append("M=").append(tamanhoTabela).append(", ")
+                    .append("N=").append(quantidadeDados).append(", ")
+                    .append("Estrategia=").append(nomeEstrategia).append(", ")
+                    .append("Funcao=").append(nomeFuncao).append("]: ");
+
+            for (int i = 0; i < tamanhoAmostraEfetivo; i++) {
+                if (i > 0) sb.append(", ");
+                sb.append(amostra[i]);
+            }
+            System.out.println(sb.toString());
+        }
+
+        // 3) CSV principal (métricas)
+        if (csvMetricas != null) {
+            csvMetricas.escreverLinha(
                     tamanhoTabela, quantidadeDados, nomeEstrategia, nomeFuncao,
                     tempoInsercao.getDuracaoEmMilissegundos(),
                     tempoBusca.getDuracaoEmMilissegundos(),
@@ -154,6 +202,16 @@ public class Main {
                     gapMin, gapMedio, gapMax,
                     top1, top2, top3
             );
+        }
+
+        // 4) CSV da amostra de registros (um registro por linha)
+        if (csvAmostra != null && tamanhoAmostraEfetivo > 0) {
+            for (int i = 0; i < tamanhoAmostraEfetivo; i++) {
+                csvAmostra.escreverLinha(
+                        tamanhoTabela, quantidadeDados, nomeEstrategia, nomeFuncao,
+                        i, amostra[i]
+                );
+            }
         }
     }
 
