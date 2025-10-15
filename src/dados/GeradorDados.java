@@ -12,8 +12,8 @@ public class GeradorDados {
     private int quantidadeJaGerada;
 
     /**
-     * @param sementeAleatoria           semente usada para tornar a sequência reprodutível
-     * @param quantidadeTotalElementos   total de elementos que serão gerados
+     * @param sementeAleatoria semente usada para tornar a sequência reprodutível
+     * @param quantidadeTotalElementos total de elementos que serão gerados
      */
     public GeradorDados(long sementeAleatoria, int quantidadeTotalElementos) {
         if (quantidadeTotalElementos < 0) {
@@ -65,7 +65,6 @@ public class GeradorDados {
 
     /**
      * Gera todos os elementos chamando o consumidor para cada código.
-     * Útil quando você quer processar sem criar estruturas temporárias.
      */
     public void paraCadaCodigo(IntConsumer consumidorDeCodigo) {
         while (temProximoElemento()) {
