@@ -1,7 +1,10 @@
 import dados.GeradorDados;
+import dados.Registro;
+
 import execucao.CsvResultados;
 import execucao.ImpressoraResultados;
 import execucao.ParametrosExperimento;
+
 import medidas.ContadoresMetrica;
 import medidas.MedidorTempo;
 
@@ -16,8 +19,11 @@ import hash.tabelas.TabelaHashLinear;
 import hash.tabelas.TabelaHashQuadratica;
 
 /**
- * Orquestra os experimentos: (M × N × estratégia × função hash)
- * Imprime tabela em Markdown e grava CSV (quando habilitado).
+ * Orquestra os experimentos:
+ * (M × N × estratégia × função hash)
+ * - imprime tabela Markdown no console
+ * - grava CSV se habilitado
+ * Usa objetos Registro (cada elemento é um Registro).
  */
 public class Main {
 
@@ -30,7 +36,7 @@ public class Main {
         CsvResultados csv = null;
         if (GRAVAR_CSV) {
             csv = new CsvResultados(CAMINHO_CSV);
-            csv.abrir();
+            csv.abrir(); // pode lançar; propagará
         }
 
         int[] tamanhosTabela = ParametrosExperimento.TAMANHOS_TABELA;
@@ -61,7 +67,7 @@ public class Main {
         }
 
         if (csv != null) {
-            csv.close();
+            csv.close(); // pode lançar; propagará
         }
     }
 
@@ -75,26 +81,30 @@ public class Main {
         MedidorTempo tempoInsercao = new MedidorTempo();
         MedidorTempo tempoBusca    = new MedidorTempo();
 
+        // Conjunto de dados (cada elemento é um Registro)
         GeradorDados gerador = new GeradorDados(ParametrosExperimento.SEMENTE, quantidadeDados);
 
-        // Inserção
+        // ---------- INSERÇÃO ----------
         tempoInsercao.iniciar();
         while (gerador.temProximoElemento()) {
-            int chave = gerador.proximoCodigo();
+            // usa Registro como especificado no enunciado
+            Registro registro = new Registro(gerador.proximoCodigo());
+            int chave = registro.getCodigo();           // continua inserindo como int (performático)
             tabela.inserir(chave, cont);
         }
         tempoInsercao.parar();
 
-        // Busca (mesma sequência)
+        // ---------- BUSCA ----------
         gerador.reiniciarSequencia();
         tempoBusca.iniciar();
         while (gerador.temProximoElemento()) {
-            int chave = gerador.proximoCodigo();
+            Registro registro = new Registro(gerador.proximoCodigo());
+            int chave = registro.getCodigo();
             tabela.buscar(chave, cont);
         }
         tempoBusca.parar();
 
-        // --------- Cálculo das métricas de distribuição ---------
+        // ---------- MÉTRICAS DE DISTRIBUIÇÃO ----------
         int gapMin = 0, gapMax = 0, top1 = 0, top2 = 0, top3 = 0;
         double gapMedio = 0.0;
 
@@ -121,19 +131,19 @@ public class Main {
                 break;
             }
         }
-        // --------------------------------------------------------
 
-        // Saída no console
+        // ---------- SAÍDA NO CONSOLE ----------
         ImpressoraResultados.imprimirLinha(
                 tamanhoTabela, quantidadeDados, nomeEstrategia, nomeFuncao,
                 tempoInsercao.getDuracaoEmMilissegundos(),
                 tempoBusca.getDuracaoEmMilissegundos(),
                 cont.getQuantidadeColisoesInsercao(),
                 cont.getQuantidadePassosBusca(),
-                gapMin, gapMedio, gapMax, top1, top2, top3
+                gapMin, gapMedio, gapMax,
+                top1, top2, top3
         );
 
-        // CSV opcional
+        // ---------- CSV OPCIONAL ----------
         if (csv != null) {
             csv.escreverLinha(
                     tamanhoTabela, quantidadeDados, nomeEstrategia, nomeFuncao,
@@ -141,7 +151,8 @@ public class Main {
                     tempoBusca.getDuracaoEmMilissegundos(),
                     cont.getQuantidadeColisoesInsercao(),
                     cont.getQuantidadePassosBusca(),
-                    gapMin, gapMedio, gapMax, top1, top2, top3
+                    gapMin, gapMedio, gapMax,
+                    top1, top2, top3
             );
         }
     }
