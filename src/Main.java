@@ -19,28 +19,17 @@ import hash.tabelas.TabelaHashEncadeada;
 import hash.tabelas.TabelaHashLinear;
 import hash.tabelas.TabelaHashQuadratica;
 
-/**
- * Orquestra os experimentos:
- * (M × N × estratégia × função hash)
- * - imprime tabela Markdown no console
- * - grava CSV de métricas (CsvResultados)
- * - imprime e grava uma AMOSTRA de registros por combinação (opcional)
- * Usa objetos Registro para cada elemento.
- */
 public class Main {
 
-    // ----- controles de saída -----
     private static final boolean GRAVAR_CSV_METRICAS     = true;
     private static final String  CAMINHO_CSV_METRICAS    = "resultados_hash.csv";
 
-    private static final boolean EXIBIR_AMOSTRA_CONSOLE  = true;   // imprime a amostra no console
-    private static final boolean GRAVAR_CSV_AMOSTRA      = true;   // grava amostra em CSV separado
+    private static final boolean EXIBIR_AMOSTRA_CONSOLE  = true;
+    private static final boolean GRAVAR_CSV_AMOSTRA      = true;
     private static final String  CAMINHO_CSV_AMOSTRA     = "registros_amostra.csv";
-    private static final int     TAMANHO_AMOSTRA         = 10;     // quantidade de registros por combinação
+    private static final int     TAMANHO_AMOSTRA         = 10;
 
     public static void main(String[] args) throws Exception {
-        //ImpressoraResultados.imprimirCabecalho();
-
         CsvResultados csvMetricas = null;
         if (GRAVAR_CSV_METRICAS) {
             csvMetricas = new CsvResultados(CAMINHO_CSV_METRICAS);
@@ -82,7 +71,7 @@ public class Main {
                         executar("quadratica", new TabelaHashQuadratica(m, f), m, n, nomeFuncao, csvMetricas, csvAmostra);
                     } else {
                         System.out.printf(
-                                "Combinação inválida: n=%d > m=%d para função %s (linear/quadrática)%n",
+                                "Combinação inválida: n=%d > m=%d para função %s (linearquadrática)%n",
                                 n, m, nomeFuncao
                         );
                     }
@@ -114,19 +103,16 @@ public class Main {
         MedidorTempo tempoInsercao = new MedidorTempo();
         MedidorTempo tempoBusca    = new MedidorTempo();
 
-        // Amostra de registros
         final int tamanhoAmostraEfetivo = Math.min(TAMANHO_AMOSTRA, quantidadeDados);
         final String[] amostra = new String[tamanhoAmostraEfetivo];
         int preenchidosAmostra = 0;
 
-        // ---------- INSERÇÃO ----------
         GeradorDados gerador = new GeradorDados(ParametrosExperimento.SEMENTE, quantidadeDados);
         tempoInsercao.iniciar();
         while (gerador.temProximoElemento()) {
             Registro registro = new Registro(gerador.proximoCodigo());
             int chave = registro.getCodigo();
 
-            // Coleta os primeiros N registros para amostra
             if (preenchidosAmostra < tamanhoAmostraEfetivo) {
                 amostra[preenchidosAmostra++] = registro.getCodigoComoNoveDigitos();
             }
@@ -135,7 +121,6 @@ public class Main {
         }
         tempoInsercao.parar();
 
-        // ---------- BUSCA ----------
         gerador.reiniciarSequencia();
         tempoBusca.iniciar();
         while (gerador.temProximoElemento()) {
@@ -144,7 +129,6 @@ public class Main {
         }
         tempoBusca.parar();
 
-        // ---------- MÉTRICAS DE DISTRIBUIÇÃO ----------
         int gapMin = 0, gapMax = 0, top1 = 0, top2 = 0, top3 = 0;
         double gapMedio = 0.0;
 
@@ -172,9 +156,6 @@ public class Main {
             }
         }
 
-        // ---------- SAÍDAS ----------
-        // 1) Métricas em tabela Markdown
-        /*
         ImpressoraResultados.imprimirLinha(
                 tamanhoTabela, quantidadeDados, nomeEstrategia, nomeFuncao,
                 tempoInsercao.getDuracaoEmMilissegundos(),
@@ -184,11 +165,6 @@ public class Main {
                 gapMin, gapMedio, gapMax,
                 top1, top2, top3
         );
-        *\
-         */
-
-        // 2) Amostra no console (opcional)
-        /*
         if (EXIBIR_AMOSTRA_CONSOLE && tamanhoAmostraEfetivo > 0) {
             StringBuilder sb = new StringBuilder(64 + 12 * tamanhoAmostraEfetivo);
             sb.append("Amostra de registros (")
@@ -204,10 +180,7 @@ public class Main {
             }
             System.out.println(sb.toString());
         }
-        *\
-         */
 
-        // 3) CSV principal (métricas)
         if (csvMetricas != null) {
             csvMetricas.escreverLinha(
                     tamanhoTabela, quantidadeDados, nomeEstrategia, nomeFuncao,
@@ -220,7 +193,6 @@ public class Main {
             );
         }
 
-        // 4) CSV da amostra de registros (um registro por linha)
         if (csvAmostra != null && tamanhoAmostraEfetivo > 0) {
             for (int i = 0; i < tamanhoAmostraEfetivo; i++) {
                 csvAmostra.escreverLinha(
@@ -230,10 +202,7 @@ public class Main {
             }
         }
     }
-
-    // =================== Helpers de métricas ===================
-
-    // Encadeada: gaps nos buckets (sequências de buckets vazios)
+    
     private static Estatisticas calcularGapsEncadeada(TabelaHashEncadeada t) {
         int m = t.getQuantidadeBuckets();
         int gapAtual = 0, gapMin = Integer.MAX_VALUE, gapMax = 0, blocos = 0;
@@ -258,7 +227,6 @@ public class Main {
         return new Estatisticas(gapMin, (double) soma / blocos, gapMax);
     }
 
-    // Encadeada: top-3 tamanhos de lista nos buckets
     private static int[] obterTop3Encadeada(TabelaHashEncadeada t) {
         int m = t.getQuantidadeBuckets();
         int a = 0, b = 0, c = 0;
@@ -271,7 +239,6 @@ public class Main {
         return new int[]{a, b, c};
     }
 
-    // Aberta (linear/quadrática): gaps no vetor principal (runs de posições vazias)
     private static Estatisticas calcularGapsAberta(int tamanho, java.util.function.IntPredicate posicaoVazia) {
         int gapAtual = 0, gapMin = Integer.MAX_VALUE, gapMax = 0, blocos = 0;
         long soma = 0L;
@@ -295,7 +262,6 @@ public class Main {
         return new Estatisticas(gapMin, (double) soma / blocos, gapMax);
     }
 
-    // Estrutura simples para devolver as 3 métricas de gaps
     private static final class Estatisticas {
         final int min; final double media; final int max;
         Estatisticas(int min, double media, int max) { this.min = min; this.media = media; this.max = max; }
