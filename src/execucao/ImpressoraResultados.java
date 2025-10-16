@@ -1,6 +1,5 @@
 package execucao;
 
-/** Utilitário simples para imprimir cabeçalho e linhas em Markdown. */
 public final class ImpressoraResultados {
     private ImpressoraResultados(){}
 

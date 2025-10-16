@@ -7,10 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
-/**
- * CSV simples para gravar uma amostra de registros por combinação.
- * Cabeçalho: M,N,estrategia,funcao,ordem,registro_9_digitos
- */
 public final class CsvAmostraRegistros implements AutoCloseable {
 
     private final String caminhoArquivo;
