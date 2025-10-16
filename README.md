@@ -26,7 +26,7 @@ No projeto utilizamos três funções hash implementadas em `src/hash/funcoes/`.
 **Descrição / Algoritmo:**  
 Calcula a soma dos dígitos decimais do código do `Registro` e aplica `soma % M` onde `M` é o tamanho do vetor da tabela. Ex.: para `123456789`, soma = `45`, índice = `45 % M`.
 
-**Complexidade:** O(1) por elemento (variação pequena e constante — soma de 9 dígitos).
+**Complexidade:** O(1) por elemento (variação pequena e constante, soma de 9 dígitos).
 
 **Vantagens:**  
 - Implementação simples e determinística.  
@@ -43,7 +43,7 @@ Calcula a soma dos dígitos decimais do código do `Registro` e aplica `soma % M
 
 ### `FuncaoHashMultiplicacao` (Método da multiplicação)
 **Descrição / Algoritmo:**  
-Converte o código em inteiro `k`, multiplica por uma constante `A` (0 < A < 1 — tipicamente baseada em números irracionais) e usa a parte fracionária: `h(k) = floor( M * frac(k * A) )`. Em implementações inteiras, usa-se `((k * c) >>> shift) & (M-1)` quando M é potência de 2.
+Converte o código em inteiro `k`, multiplica por uma constante `A` (0 < A < 1, tipicamente baseada em números irracionais) e usa a parte fracionária: `h(k) = floor( M * frac(k * A) )`. Em implementações inteiras, usa-se `((k * c) >>> shift) & (M-1)` quando M é potência de 2.
 
 **Complexidade:** O(1)
 
@@ -57,7 +57,7 @@ Converte o código em inteiro `k`, multiplica por uma constante `A` (0 < A < 1 �
 - Quando implementado de forma incorreta (ou com M não adequado) pode gerar artefatos.
 
 **Justificativa de uso:**  
-Método clássico que frequentemente oferece bom trade-off entre simplicidade e dispersão — por isso é uma ótima segunda linha de comparação.
+Método clássico que frequentemente oferece uma boa troca entre simplicidade e dispersão, por isso é uma ótima segunda linha de comparação.
 
 ---
 
@@ -68,7 +68,7 @@ Inspira-se em técnicas que usam constantes irracionais (por exemplo, proporçã
 **Complexidade:** O(1)
 
 **Vantagens:**  
-- Muito boa dispersão de bits — tende a reduzir grandes agrupamentos (clustering).  
+- Muito boa dispersão de bits, tende a reduzir grandes agrupamentos (clustering).  
 - Robusta contra padrões comuns nos códigos; geralmente gera menos colisões do que funções muito simples.
 
 **Desvantagens:**  
