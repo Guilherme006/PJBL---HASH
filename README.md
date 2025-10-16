@@ -18,6 +18,66 @@ Foram implementadas **três variações de tabelas hash** e **três funções ha
 
 ---
 
+## Funções Hash: Descrição, funcionamento e análise
+
+No projeto utilizamos três funções hash implementadas em `src/hash/funcoes/`. Abaixo está uma explicação técnica de cada uma, com vantagens, desvantagens e justificativa da escolha.
+
+### `FuncaoHashSomaDigitos` (Soma dos dígitos)
+**Descrição / Algoritmo:**  
+Calcula a soma dos dígitos decimais do código do `Registro` e aplica `soma % M` onde `M` é o tamanho do vetor da tabela. Ex.: para `123456789`, soma = `45`, índice = `45 % M`.
+
+**Complexidade:** O(1) por elemento (variação pequena e constante — soma de 9 dígitos).
+
+**Vantagens:**  
+- Implementação simples e determinística.  
+- Rápida execução (opera sobre 9 dígitos fixos).
+
+**Desvantagens:**  
+- Fraca distribuição para códigos com padrões semelhantes (ex.: se muitos códigos têm dígitos repetidos ou prefixos comuns, gera clusters).  
+- Alta chance de colisões quando M tem fatores em comum com distribuições dos dígitos.
+
+**Justificativa de uso:**  
+Útil como baseline: mostra comportamento de uma função muito simples para comparação com funções mais sofisticadas.
+
+---
+
+### `FuncaoHashMultiplicacao` (Método da multiplicação)
+**Descrição / Algoritmo:**  
+Converte o código em inteiro `k`, multiplica por uma constante `A` (0 < A < 1 — tipicamente baseada em números irracionais) e usa a parte fracionária: `h(k) = floor( M * frac(k * A) )`. Em implementações inteiras, usa-se `((k * c) >>> shift) & (M-1)` quando M é potência de 2.
+
+**Complexidade:** O(1)
+
+**Vantagens:**  
+- Boa dispersão em muitos casos práticos.  
+- Menos sensível a padrões lineares nos dados comparado à soma de dígitos.  
+- Implementação rápida e de baixo custo.
+
+**Desvantagens:**  
+- Requer escolha cuidadosa da constante `A` para obter dispersão ideal.  
+- Quando implementado de forma incorreta (ou com M não adequado) pode gerar artefatos.
+
+**Justificativa de uso:**  
+Método clássico que frequentemente oferece bom trade-off entre simplicidade e dispersão — por isso é uma ótima segunda linha de comparação.
+
+---
+
+### `HashRotacaoDourada` (Rotação / Proporção Áurea)
+**Descrição / Algoritmo:**  
+Inspira-se em técnicas que usam constantes irracionais (por exemplo, proporção áurea φ) e operações bitwise/rotacionais para misturar os bits do número chave. Uma implementação típica: multiplica `k` por uma constante relacionada à proporção áurea e realiza rotações/xors para espalhar melhor os bits antes de aplicar `% M`.
+
+**Complexidade:** O(1)
+
+**Vantagens:**  
+- Muito boa dispersão de bits — tende a reduzir grandes agrupamentos (clustering).  
+- Robusta contra padrões comuns nos códigos; geralmente gera menos colisões do que funções muito simples.
+
+**Desvantagens:**  
+- Um pouco mais custosa computacionalmente (operações de multiplicação e rotações).  
+- Dependente da implementação: má escolha das operações ou constantes pode reduzir qualidade.
+
+**Justificativa de uso:**  
+Escolhida por ser uma função com tendência comprovada a distribuir bem chaves numéricas, servindo como alternativa mais “sofisticada” às anteriores.
+
 ##  Funcionamento do Sistema
 
 O sistema foi projetado de forma modular e automatizada para permitir **execuções de experimentos controlados**, desde a geração dos dados até a análise e exportação dos resultados.  
