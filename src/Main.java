@@ -3,7 +3,6 @@ import dados.Registro;
 
 import execucao.CsvAmostraRegistros;
 import execucao.CsvResultados;
-import execucao.ImpressoraResultados;
 import execucao.ParametrosExperimento;
 
 import medidas.ContadoresMetrica;
@@ -33,13 +32,13 @@ public class Main {
     private static final boolean GRAVAR_CSV_METRICAS     = true;
     private static final String  CAMINHO_CSV_METRICAS    = "resultados_hash.csv";
 
-    private static final boolean EXIBIR_AMOSTRA_CONSOLE  = true;   // imprime a amostra no console
+    private static final boolean EXIBIR_AMOSTRA_CONSOLE  = false;   // imprime a amostra no console
     private static final boolean GRAVAR_CSV_AMOSTRA      = true;   // grava amostra em CSV separado
     private static final String  CAMINHO_CSV_AMOSTRA     = "registros_amostra.csv";
     private static final int     TAMANHO_AMOSTRA         = 10;     // quantidade de registros por combinação
 
     public static void main(String[] args) throws Exception {
-        ImpressoraResultados.imprimirCabecalho();
+        // Cabeçalho de saída removido (antes: ImpressoraResultados.imprimirCabecalho());
 
         CsvResultados csvMetricas = null;
         if (GRAVAR_CSV_METRICAS) {
@@ -164,15 +163,7 @@ public class Main {
 
         // ---------- SAÍDAS ----------
         // 1) Métricas em tabela Markdown
-        ImpressoraResultados.imprimirLinha(
-                tamanhoTabela, quantidadeDados, nomeEstrategia, nomeFuncao,
-                tempoInsercao.getDuracaoEmMilissegundos(),
-                tempoBusca.getDuracaoEmMilissegundos(),
-                cont.getQuantidadeColisoesInsercao(),
-                cont.getQuantidadePassosBusca(),
-                gapMin, gapMedio, gapMax,
-                top1, top2, top3
-        );
+        // ImpressoraResultados.imprimirLinha(...) removido; se quiser podemos substituir por prints
 
         // 2) Amostra no console (opcional)
         if (EXIBIR_AMOSTRA_CONSOLE && tamanhoAmostraEfetivo > 0) {
