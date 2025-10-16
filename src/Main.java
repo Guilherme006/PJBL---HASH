@@ -39,7 +39,7 @@ public class Main {
     private static final int     TAMANHO_AMOSTRA         = 10;     // quantidade de registros por combinação
 
     public static void main(String[] args) throws Exception {
-        ImpressoraResultados.imprimirCabecalho();
+        //ImpressoraResultados.imprimirCabecalho();
 
         CsvResultados csvMetricas = null;
         if (GRAVAR_CSV_METRICAS) {
@@ -164,6 +164,7 @@ public class Main {
 
         // ---------- SAÍDAS ----------
         // 1) Métricas em tabela Markdown
+        /*
         ImpressoraResultados.imprimirLinha(
                 tamanhoTabela, quantidadeDados, nomeEstrategia, nomeFuncao,
                 tempoInsercao.getDuracaoEmMilissegundos(),
@@ -173,8 +174,11 @@ public class Main {
                 gapMin, gapMedio, gapMax,
                 top1, top2, top3
         );
+        *\
+         */
 
         // 2) Amostra no console (opcional)
+        /*
         if (EXIBIR_AMOSTRA_CONSOLE && tamanhoAmostraEfetivo > 0) {
             StringBuilder sb = new StringBuilder(64 + 12 * tamanhoAmostraEfetivo);
             sb.append("Amostra de registros (")
@@ -190,6 +194,8 @@ public class Main {
             }
             System.out.println(sb.toString());
         }
+        *\
+         */
 
         // 3) CSV principal (métricas)
         if (csvMetricas != null) {
