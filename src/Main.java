@@ -73,9 +73,19 @@ public class Main {
                     String nomeFuncao = nomesFuncoes[i];
                     FuncaoHash f = funcoes[i];
 
+                    boolean tabelaPequena = n > m;
+
                     executar("encadeada", new TabelaHashEncadeada(m, f), m, n, nomeFuncao, csvMetricas, csvAmostra);
-                    executar("linear",    new TabelaHashLinear(m, f),     m, n, nomeFuncao, csvMetricas, csvAmostra);
-                    executar("quadratica",new TabelaHashQuadratica(m, f), m, n, nomeFuncao, csvMetricas, csvAmostra);
+
+                    if (!tabelaPequena) {
+                        executar("linear", new TabelaHashLinear(m, f), m, n, nomeFuncao, csvMetricas, csvAmostra);
+                        executar("quadratica", new TabelaHashQuadratica(m, f), m, n, nomeFuncao, csvMetricas, csvAmostra);
+                    } else {
+                        System.out.printf(
+                                "Combinação inválida: n=%d > m=%d para função %s (linear/quadrática)%n",
+                                n, m, nomeFuncao
+                        );
+                    }
                 }
             }
         }
